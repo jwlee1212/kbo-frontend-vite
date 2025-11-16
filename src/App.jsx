@@ -1,65 +1,137 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios'; // 1. 방금 설치한 '전화기(axios)'
+import axios from 'axios';
 import './App.css';
 
-function App() {
-  // 2. '데이터'를 담을 '그릇'(state)을 만듭니다.
-  const [rankingData, setRankingData] = useState([]);
-  const [error, setError] = useState(null);
+// 1. 재사용 가능한 테이블 컴포넌트 생성
+const RankingTable = ({ data, statsType }) => {
+    // 투수/타자에 따라 테이블 헤더를 다르게 설정
+    const headers = statsType === 'PITCHER'
+        ? ['선수명', 'FIP', '이닝', '삼진', '볼넷', '피홈런']
+        : ['선수명', 'wRC', '타석(PA)', '단타', '2루타', '3루타', '홈런'];
 
-  // 3. '얼굴'이 '딱 1번'만 '엔진'에게 '전화'를 겁니다.
+    const getRowData = (player) => {
+        // 투수: FIP를 보여줌
+        if (statsType === 'PITCHER') {
+            return [
+                player.name, 
+                player.fip, 
+                player.inningsPitched, 
+                player.strikeouts, 
+                player.walks, 
+                player.homeRuns
+            ];
+        } else { // 타자: wRC+를 보여줌
+            return [
+                player.name, 
+                player.wrc, 
+                player.plateAppearances,
+                player.single, 
+                player.doubleBase, 
+                player.tripleBase,
+                player.homeRunBat
+            ];
+        }
+    };
+
+    return (
+        <table>
+            <thead>
+                <tr>
+                    {headers.map(header => <th key={header}>{header}</th>)}
+                </tr>
+            </thead>
+            <tbody>
+                {data.map(player => (
+                    <tr key={player.name}>
+                        {getRowData(player).map((data, index) => (
+                            // index가 1일 때 (FIP 또는 wRC+ 값)만 강조 스타일 적용
+                            <td 
+                                key={index} 
+                                style={index === 1 ? {fontWeight: 'bold', color: '#d32f2f'} : {}}>
+                                {data}
+                            </td>
+                        ))}
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+};
+
+
+function App() {
+  // 2. '현재 선택된 뷰' 상태 관리: 'PITCHER' 또는 'HITTER'
+  const [currentView, setCurrentView] = useState('PITCHER');
+  const [rankingData, setRankingData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // 3. API 호출 로직: 뷰가 바뀔 때마다 실행됨
   useEffect(() => {
-    axios.get('http://localhost:8080/api/fip-ranking') // 4. '엔진 기지' 주소!
+    setLoading(true);
+    setError(null);
+    
+    // ⬅️ 님이 '백엔드'에서 새로 만드신 주소로 '전화'를 겁니다!
+    const endpoint = currentView === 'PITCHER' 
+        ? 'http://localhost:8080/api/pitching-ranking' // 투수 랭킹 주소
+        : 'http://localhost:8080/api/hitting-ranking'; // 타자 랭킹 주소
+        
+    axios.get(endpoint)
       .then(response => {
-        // 5. '전화'에 '성공'하면 -> '데이터'를 '그릇'에 담습니다.
         setRankingData(response.data);
       })
       .catch(error => {
-        // 6. '전화'에 '실패'하면 -> '에러'를 '그릇'에 담습니다.
         console.error("API 호출 중 오류 발생:", error);
-        setError(error); // (아마 '새로운 보스'가 뜰 겁니다!)
+        // 404 에러는 백엔드 코드가 작동 중이라는 뜻이므로 CORS 경고만 표시
+        if (error.response && error.response.status === 404) {
+             setError(new Error("API 엔드포인트 이름을 확인하세요! (404 Not Found)"));
+        } else {
+             setError(error);
+        }
+      })
+      .finally(() => {
+          setLoading(false);
       });
-  }, []); // '[]' : 딱 1번만 실행하라는 '주문'
+  }, [currentView]); // currentView가 바뀔 때마다 이 effect가 재실행됨
 
-  // 7. '얼굴'을 '그립니다'.
+  
+  // 4. '얼굴' 그리기
   return (
     <div className="App">
-      <h1>KBO 투수 FIP 랭킹 (MVP v1.0)</h1>
+      <h1>KBO 통계 대시보드 (MVP v1.0)</h1>
+
+      {/* 5. 화면 전환 버튼 */}
+      <div className="view-selector">
+          <button 
+              className={currentView === 'PITCHER' ? 'active' : ''}
+              onClick={() => setCurrentView('PITCHER')}>
+              투수 랭킹 (FIP)
+          </button>
+          <button 
+              className={currentView === 'HITTER' ? 'active' : ''}
+              onClick={() => setCurrentView('HITTER')}>
+              타자 랭킹 (wRC)
+          </button>
+      </div>
+
+      {loading && <h2>데이터를 불러오는 중입니다...</h2>}
       
-      {/* '에러' 그릇에 '에러'가 담겼다면? */}
+      {/* 6. 에러 처리 */}
       {error && (
         <div style={{ color: 'red', border: '2px solid red', padding: '10px' }}>
-          <h2>🚨 새로운 보스(CORS) 출현! 🚨</h2>
-          <p>F12(개발자 도구) ➔ 'Console' 탭을 확인하세요!</p>
-          <p>(예상 오류: 'Access-Control-Allow-Origin' ...)</p>
+          <h2>🚨 API 호출 실패 🚨</h2>
+          <p>{error.message}</p>
         </div>
       )}
-
-      {/* '데이터' 그릇에 '데이터'가 담겼다면? */}
-      <table>
-        <thead>
-          <tr>
-            <th>선수명</th>
-            <th>FIP</th>
-            <th>이닝</th>
-            <th>삼진</th>
-            <th>볼넷</th>
-            <th>피홈런</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rankingData.map(player => (
-            <tr key={player.name}>
-              <td>{player.name}</td>
-              <td>{player.fip}</td>
-              <td>{player.inningsPitched}</td>
-              <td>{player.strikeouts}</td>
-              <td>{player.walks}</td>
-              <td>{player.homeRuns}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      
+      {/* 7. 랭킹 테이블 렌더링 */}
+      {!loading && rankingData.length > 0 && (
+          <RankingTable 
+              data={rankingData} 
+              statsType={currentView} 
+          />
+      )}
+      
     </div>
   );
 }

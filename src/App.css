@@ -1,81 +1,32 @@
-/* 기본 배경 및 폰트 설정 */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f7f6;
-    padding-top: 0; /* ⬅️ 불필요한 위쪽 여백 제거 */
-    margin: 0; /* ⬅️ 브라우저 기본 여백 제거 */
-}
-
-/* 전체 컨테이너 설정 */
-/* 전체 컨테이너 설정 */
-/* 전체 컨테이너 설정 */
-.App {
-    width: 98%; /* ⬅️ 95%에서 98%로 늘려서 화면 양쪽으로 더 확장 */
-    max-width: none; /* ⬅️ 1200px 제한을 완전히 제거합니다. (이게 핵심!) */
-    margin: 20px auto; /* 위아래 20px 여백만 남기고 중앙 정렬 */
-    text-align: center;
-    background-color: #ffffff;
-    padding: 25px; 
-    border-radius: 10px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* 제목 설정 */
-h1 {
-    color: #1a237e; /* 짙은 남색 */
-    margin-bottom: 20px;
+/* 뷰 선택기 스타일 */
+.view-selector {
+    margin-bottom: 25px;
     border-bottom: 2px solid #e0e0e0;
     padding-bottom: 10px;
 }
 
-/* 테이블 설정 */
-table {
-    width: 100%;
-    border-collapse: collapse; /* 선을 하나로 합침 */
-    margin: 25px auto
-}
-
-/* 헤더와 데이터 셀 설정 */
-th, td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #000000;
-}
-
-/* 헤더 (제목 줄) 설정 */
-th {
-    background-color: #3f51b5; /* 데이터 블루 */
-    color: rgb(0, 0, 0);
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 14px;
-    letter-spacing: 0.05em;
-}
-
-/* 홀수/짝수 줄 배경색 교차 설정 */
-tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-/* 마우스 오버 시 색상 변경 (하이라이트) */
-tr:hover {
-    background-color: #e8eaf6; /* 연한 파란색 계열 */
+.view-selector button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: 1px solid #3f51b5;
+    border-radius: 5px;
+    background-color: #ffffff;
+    color: #3f51b5;
+    font-size: 16px;
     cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-/* FIP 값 강조 (추가적인 스타일링 요소) */
-td:nth-child(2) {
+.view-selector button:hover {
+    background-color: #e8eaf6;
+}
+
+/* 활성화된 버튼 스타일 */
+.view-selector button.active {
+    background-color: #3f51b5;
+    color: white;
     font-weight: bold;
-    color: #d32f2f; /* 빨간색 계열 */
 }
 
-/* 에러 박스 (CORS)는 그대로 빨갛게 유지 */
-.App div[style*="border: 2px solid red"] {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    font-size: 1.1em;
-}
-/* FIP 값을 제외한 모든 텍스트의 기본 색상을 짙은 남색으로 통일 */
-td {
-    color: #1a237e; /* 짙은 남색 */
-}
+/* FIP/wRC+ 색상 강조 (td:nth-child(2)는 여전히 빨간색) */
+/* ⬅️ td:nth-child(2)의 빨간색 강조 코드를 유지해주세요. */
