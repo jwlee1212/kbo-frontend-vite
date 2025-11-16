@@ -1,42 +1,78 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* 기본 배경 및 폰트 설정 */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7f6; /* 연한 회색 배경 */
+    padding-top: 30px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* 전체 컨테이너 설정 */
+.App {
+    width: 95%;
+    max-width: 900px; /* 테이블의 최대 너비 */
+    margin: 0 auto; /* 중앙 정렬 */
+    text-align: center;
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 10px; /* 둥근 모서리 */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); /* 은은한 그림자 */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* 제목 설정 */
+h1 {
+    color: #1a237e; /* 짙은 남색 */
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
 }
 
-.card {
-  padding: 2em;
+/* 테이블 설정 */
+table {
+    width: 100%;
+    border-collapse: collapse; /* 선을 하나로 합침 */
+    margin: 25px auto
 }
 
-.read-the-docs {
-  color: #888;
+/* 헤더와 데이터 셀 설정 */
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #000000;
+}
+
+/* 헤더 (제목 줄) 설정 */
+th {
+    background-color: #3f51b5; /* 데이터 블루 */
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+}
+
+/* 홀수/짝수 줄 배경색 교차 설정 */
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* 마우스 오버 시 색상 변경 (하이라이트) */
+tr:hover {
+    background-color: #e8eaf6; /* 연한 파란색 계열 */
+    cursor: pointer;
+}
+
+/* FIP 값 강조 (추가적인 스타일링 요소) */
+td:nth-child(2) {
+    font-weight: bold;
+    color: #d32f2f; /* 빨간색 계열 */
+}
+
+/* 에러 박스 (CORS)는 그대로 빨갛게 유지 */
+.App div[style*="border: 2px solid red"] {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+}
+/* FIP 값을 제외한 모든 텍스트의 기본 색상을 짙은 남색으로 통일 */
+td {
+    color: #1a237e; /* 짙은 남색 */
 }
