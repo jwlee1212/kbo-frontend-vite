@@ -1,32 +1,236 @@
-/* 뷰 선택기 스타일 */
+/* =========================================
+   1. 전역 설정 (Global Reset)
+   ========================================= */
+html, body {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    background-color: #ffffff;
+    color: #333;
+}
+
+/* 링크 기본 스타일 제거 (공통) */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+
+/* =========================================
+   2. 메인 화면 (Home.jsx) 스타일
+   ========================================= */
+.home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100vw; /* min-width: 100vw 대신 width: 100%가 더 안정적 */
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); /* 은은한 그라데이션 */
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
+}
+
+/* 히어로 섹션 (제목) */
+.hero-section {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    color: #1a237e;
+    margin-bottom: 15px;
+    letter-spacing: -1px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: #555;
+    line-height: 1.6;
+}
+
+/* 메뉴 그리드 (카드 배치) */
+.menu-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 1000px;
+    width: 100%;
+}
+
+/* 메뉴 카드 디자인 */
+.menu-card {
+    background: white;
+    width: 280px;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    color: #333;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+/* 메인 카드 (강조) */
+.menu-card.main-card {
+    border: 2px solid #3f51b5;
+}
+
+.menu-card .icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.menu-card h3 {
+    margin: 10px 0;
+    color: #1a237e;
+    font-size: 1.4rem;
+}
+
+.menu-card p {
+    font-size: 0.95rem;
+    color: #777;
+    line-height: 1.4;
+}
+
+/* 비활성화된 카드 */
+.menu-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f9f9f9;
+}
+.menu-card.disabled:hover {
+    transform: none;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+
+/* =========================================
+   3. 통계 대시보드 (App.jsx) 스타일 - 풀스크린 모드
+   ========================================= */
+.App {
+    width: 100%;
+    min-height: 100vh;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    background-color: #ffffff;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* 대시보드 제목 */
+.App h1 {
+    color: #1a237e;
+    margin: 0;
+    padding: 30px 0;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: center;
+    width: 100%;
+    background-color: #ffffff;
+    font-size: 2.2rem;
+    letter-spacing: -0.5px;
+}
+
+/* 뷰 선택기 (버튼 영역) */
 .view-selector {
-    margin-bottom: 25px;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+    background-color: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .view-selector button {
-    padding: 10px 20px;
-    margin: 0 10px;
-    border: 1px solid #3f51b5;
-    border-radius: 5px;
-    background-color: #ffffff;
-    color: #3f51b5;
+    padding: 10px 24px;
+    margin: 0 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    color: #555;
     font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
+    transition: all 0.2s ease;
 }
 
 .view-selector button:hover {
-    background-color: #e8eaf6;
+    background-color: #eef1f5;
+    border-color: #d0d7de;
 }
 
-/* 활성화된 버튼 스타일 */
 .view-selector button.active {
-    background-color: #3f51b5;
+    background-color: #1a237e;
     color: white;
-    font-weight: bold;
+    border-color: #1a237e;
+    box-shadow: 0 2px 4px rgba(26, 35, 126, 0.2);
 }
 
-/* FIP/wRC+ 색상 강조 (td:nth-child(2)는 여전히 빨간색) */
-/* ⬅️ td:nth-child(2)의 빨간색 강조 코드를 유지해주세요. */
+/* 테이블 공통 설정 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+/* 헤더와 데이터 셀 */
+th, td {
+    padding: 16px 20px;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 16px;
+    color: #333;
+}
+
+/* 헤더 스타일 */
+th {
+    background-color: #f8f9fa;
+    color: #555;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #1a237e;
+}
+
+/* 선수명 (첫 번째 열) 강조 */
+td:first-child {
+    text-align: left;
+    font-weight: bold;
+    color: #1a237e;
+}
+
+/* 데이터 줄무늬 및 호버 효과 */
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+tr:hover {
+    background-color: #f0f4f8;
+}
+
+/* 핵심 지표 (ERA/OPS - 두 번째 열) 빨간색 강조 */
+td:nth-child(2) {
+    font-weight: 800;
+    color: #d32f2f;
+    font-size: 17px;
+}
+
+/* 에러 박스 */
+.App div[style*="border: 2px solid red"] {
+    margin: 20px;
+}

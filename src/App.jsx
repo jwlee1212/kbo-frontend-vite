@@ -6,44 +6,47 @@ import './App.css';
 const RankingTable = ({ data, statsType }) => {
     
     // 1-A. 헤더: 투수/타자 헤더를 '최종' 업그레이드
-    const headers = statsType === 'PITCHER'
+   const headers = statsType === 'PITCHER'
         ? ['선수명', 'ERA', 'FIP', 'WHIP', 'K/9', 'BB/9', '승', '패', '세이브', '홀드', '이닝', '피안타', '자책점']
-        : ['선수명', 'OPS', 'OBP', 'SLG', 'wRC', '타석', '타점', '득점', '홈런', '3루타', '2루타', '단타', '도루', '사구'];
-
+        : ['선수명', 'OPS', '타율', 'OBP', 'SLG', 'wRC', '타석', '타점', '득점', '홈런', '3루타', '2루타', '단타', '도루', '희생타', '희생번트', '사구'];
     // 1-B. 데이터: 투수/타자 데이터를 '최종' 업그레이드 (소수점 포함!)
     const getRowData = (player) => {
         if (statsType === 'PITCHER') {
             return [
                 player.name, 
-                player.era.toFixed(2), // ⬅️ ERA (메인 지표)
-                player.fip.toFixed(2),
-                player.whip.toFixed(2),
-                player.kPerNine.toFixed(1),
-                player.bbPerNine.toFixed(1),
-                player.wins,
-                player.losses,
-                player.saves,
-                player.holds,
-                player.inningsPitched.toFixed(1),
-                player.hitsAllowed,
-                player.earnedRuns
+                (player.era ?? 0).toFixed(2), // ⬅️ 안전 장치 추가!
+                (player.fip ?? 0).toFixed(2),
+                (player.whip ?? 0).toFixed(2),
+                (player.kPerNine ?? 0).toFixed(1),
+                (player.bbPerNine ?? 0).toFixed(1),
+                player.wins ?? 0,
+                player.losses ?? 0,
+                player.saves ?? 0,
+                player.holds ?? 0,
+                (player.inningsPitched ?? 0).toFixed(1),
+                player.hitsAllowed ?? 0,
+                player.earnedRuns ?? 0
             ];
         } else { // HITTER
             return [
                 player.name, 
-                player.ops.toFixed(3), // ⬅️ OPS (메인 지표)
-                player.onBasePercentage.toFixed(3),
-                player.sluggingPercentage.toFixed(3),
-                player.wrc.toFixed(1),
-                player.plateAppearances,
-                player.rbi,
-                player.runs,
-                player.homeRunBat,
-                player.tripleBase,
-                player.doubleBase,
-                player.single,
-                player.stolenBases,
-                player.hitByPitchBat
+                (player.ops ?? 0).toFixed(3), // ⬅️ 안전 장치 추가!
+                (player.battingAverage ?? 0).toFixed(3),
+                (player.onBasePercentage ?? 0).toFixed(3),
+                (player.sluggingPercentage ?? 0).toFixed(3),
+                (player.wrc ?? 0).toFixed(1),
+                player.plateAppearances ?? 0,
+                player.rbi ?? 0,
+                player.runs ?? 0,
+                player.homeRunBat ?? 0,
+                player.tripleBase ?? 0,
+                player.doubleBase ?? 0,
+                player.single ?? 0,
+                player.stolenBases ?? 0,
+                player.hitByPitchBat ?? 0,
+                player.sacrificeFlies ?? 0, // ⬅️ SF 추가!
+                player.sacrificeHits ?? 0,  // ⬅️ SH 추가!
+              
             ];
         }
     };
