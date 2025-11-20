@@ -1,85 +1,156 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import './App.css';
+import { Link } from 'react-router-dom'; // ⚡️ 추가
 
-// 1. 재사용 가능한 테이블 컴포넌트
+// 🛠️ 컬럼 설정 (Header Label과 실제 데이터 Key를 매핑)
+const COLUMNS = {
+    PITCHER: [
+        { label: '선수명', key: 'name' },
+        { label: '포지션', key: 'position' }, // ⚡️ 포지션 추가
+        { label: 'ERA', key: 'era', main: true, format: v => v.toFixed(2) }, // main: 빨간색 강조
+        { label: 'FIP', key: 'fip', format: v => v.toFixed(2) },
+        { label: 'WHIP', key: 'whip', format: v => v.toFixed(2) },
+        { label: 'K/9', key: 'kPerNine', format: v => v.toFixed(1) },
+        { label: 'BB/9', key: 'bbPerNine', format: v => v.toFixed(1) },
+        { label: 'PFR', key: 'pfr', format: v => v.toFixed(2) },
+        { label: '승', key: 'wins' },
+        { label: '패', key: 'losses' },
+        { label: '세이브', key: 'saves' },
+        { label: '홀드', key: 'holds' },
+        { label: '이닝', key: 'inningsPitched', format: v => v.toFixed(1) },
+        { label: '자책점', key: 'earnedRuns' }
+    ],
+    HITTER: [
+        { label: '선수명', key: 'name' },
+        { label: '포지션', key: 'position' }, // ⚡️ 포지션 추가
+        { label: 'OPS', key: 'ops', main: true, format: v => v.toFixed(3) },
+        { label: '타율', key: 'battingAverage', format: v => v.toFixed(3) },
+        { label: '홈런', key: 'homeRunBat' },
+        { label: '타점', key: 'rbi' },
+        { label: '득점', key: 'runs' },
+        { label: '도루', key: 'stolenBases' },
+        { label: 'wOBA', key: 'woba', format: v => v.toFixed(3) },
+        { label: 'wRC', key: 'wrc', format: v => v.toFixed(1) },
+        { label: 'ISO', key: 'iso', format: v => v.toFixed(3) },
+        { label: 'BABIP', key: 'babip', format: v => v.toFixed(3) },
+        { label: 'GPA', key: 'gpa', format: v => v.toFixed(3) },
+        { label: 'PSN', key: 'psn', format: v => v.toFixed(2) },
+        { label: 'OBP', key: 'onBasePercentage', format: v => v.toFixed(3) },
+        { label: 'SLG', key: 'sluggingPercentage', format: v => v.toFixed(3) },
+        { label: '삼진', key: 'strikeoutsBat' },
+        { label: '볼넷', key: 'walksBat' },
+        { label: 'K/BB', key: 'kbb', format: v => v.toFixed(2) },
+        { label: 'BB/K', key: 'bbk', format: v => v.toFixed(2) }
+    ]
+};
+
 const RankingTable = ({ data, statsType }) => {
-    
-    const headers = statsType === 'PITCHER'
-        // 투수 헤더: 주요 스탯 위주 (ERA, FIP, WHIP...)
-        ? ['선수명', 'ERA', 'FIP', 'WHIP', 'K/BB', 'K/9', 'BB/9', '승', '패', '세이브', '홀드', '이닝', '자책점']
-        
-        // ⚡️ 타자 헤더: 님이 원하신 "메인(OPS) -> 클래식 -> 고급" 순서로 완벽 재배치! ⚡️
-        : ['선수명', 'OPS', '타율', '홈런', '타점', '득점', '도루', 'wOBA', 'wRC', 'ISO', 'BABIP', 'GPA', 'PSN', 'OBP', 'SLG', '삼진', '볼넷'];
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' });
+    const [searchTerm, setSearchTerm] = useState('');
 
-    const getRowData = (player) => {
-        // ⚡️ 핵심: (값 ?? 0) <-- 이 안전장치가 '흰 화면 저주'를 막아줍니다! ⚡️
-        if (statsType === 'PITCHER') {
-            return [
-                player.name, 
-                (player.era ?? 0).toFixed(2),      // ERA (안전장치 OK)
-                (player.fip ?? 0).toFixed(2),      // FIP
-                (player.whip ?? 0).toFixed(2),     // WHIP
-                (player.kbb ?? 0).toFixed(2),      // K/BB
-                (player.kPerNine ?? 0).toFixed(1), // K/9
-                (player.bbPerNine ?? 0).toFixed(1),// BB/9
-                player.wins ?? 0,
-                player.losses ?? 0,
-                player.saves ?? 0,
-                player.holds ?? 0,
-                (player.inningsPitched ?? 0).toFixed(1),
-                player.earnedRuns ?? 0
-            ];
-        } else { // HITTER (순서 재배치 + 안전장치 적용)
-            return [
-                player.name, 
-                (player.ops ?? 0).toFixed(3),            // 1. OPS (메인)
-                (player.battingAverage ?? 0).toFixed(3), // 2. 타율 (클래식 시작)
-                player.homeRunBat ?? 0,                  // 3. 홈런
-                player.rbi ?? 0,                         // 4. 타점
-                player.runs ?? 0,                        // 5. 득점
-                player.stolenBases ?? 0,                 // 6. 도루 (클래식 끝)
-                
-                (player.woba ?? 0).toFixed(3),           // 7. wOBA (고급 시작)
-                (player.wrc ?? 0).toFixed(1),            // 8. wRC
-                (player.iso ?? 0).toFixed(3),            // 9. ISO
-                (player.babip ?? 0).toFixed(3),          // 10. BABIP
-                (player.gpa ?? 0).toFixed(3),            // 11. GPA
-                (player.psn ?? 0).toFixed(2),            // 12. PSN (고급 끝)
-                
-                (player.onBasePercentage ?? 0).toFixed(3), // 13. OBP (기타)
-                (player.sluggingPercentage ?? 0).toFixed(3), // 14. SLG
-                player.strikeoutsBat ?? 0,               // 15. 삼진
-                player.walksBat ?? 0                     // 16. 볼넷
-            ];
+    // 1. 정렬 핸들러
+    const handleSort = (key) => {
+        let direction = 'desc';
+        if (sortConfig.key === key && sortConfig.direction === 'desc') {
+            direction = 'asc';
         }
+        setSortConfig({ key, direction });
     };
 
+    // 2. 데이터 필터링 & 정렬 로직
+    const processedData = useMemo(() => {
+        let sortedData = [...data];
+
+        // (1) 검색 필터
+        if (searchTerm) {
+            sortedData = sortedData.filter(player => 
+                player.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        // (2) 정렬
+        if (sortConfig.key) {
+            sortedData.sort((a, b) => {
+                const valA = a[sortConfig.key] ?? 0; // null/undefined 처리 (숫자 0으로)
+                const valB = b[sortConfig.key] ?? 0;
+                
+                // 문자열 정렬 (이름, 포지션 등)
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
+                }
+
+                // 숫자 정렬
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortedData;
+    }, [data, sortConfig, searchTerm]);
+
+    const columns = COLUMNS[statsType];
+
     return (
-        <table>
-            <thead>
-                <tr>
-                    {headers.map(header => <th key={header}>{header}</th>)}
-                </tr>
-            </thead>
-            <tbody>
-                {data.map(player => (
-                    <tr key={player.name}>
-                        {getRowData(player).map((data, index) => (
-                            // 1번째 열(이름)과 2번째 열(메인 스탯) 강조
-                            <td 
-                                key={index} 
-                                style={
-                                    index === 1 ? {fontWeight: '800', color: '#d32f2f', fontSize: '1.1em'} : 
-                                    index === 0 ? {fontWeight: 'bold', color: '#1a237e'} : {}
-                                }>
-                                {data}
-                            </td>
+        <div className="table-container">
+            <div className="controls-container">
+                <input 
+                    type="text" 
+                    placeholder="선수 이름 검색..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input"
+                />
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        {columns.map((col) => (
+                            <th 
+                                key={col.key} 
+                                onClick={() => handleSort(col.key)}
+                                className={`sortable ${sortConfig.key === col.key ? sortConfig.direction : ''}`}
+                            >
+                                {col.label}
+                            </th>
                         ))}
                     </tr>
-                ))}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {processedData.length > 0 ? (
+                        processedData.map((player) => (
+                            <tr key={player.name}>
+                                {columns.map((col) => {
+                                    const value = player[col.key] ?? (col.key === 'position' ? '-' : 0); // 포지션 없을 땐 '-'
+                                    return (
+                                        <td 
+                                            key={col.key}
+                                            style={
+                                                col.main ? { fontWeight: '800', color: '#d32f2f', fontSize: '1.1em' } :
+                                                col.key === 'name' ? { fontWeight: 'bold', color: '#1a237e', textAlign: 'left' } : 
+                                                col.key === 'position' ? { color: '#555', fontWeight: '600' } : {} // 포지션 스타일
+                                            }
+                                        >
+                                            {/* 포맷팅 함수가 있으면 적용, 없으면 그냥 출력 */}
+                                            {col.format && typeof value === 'number' ? col.format(value) : value}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={columns.length} style={{ padding: '30px', color: '#888' }}>
+                                검색 결과가 없습니다. ⚾️
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
     );
 };
 
@@ -92,7 +163,7 @@ function App() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    setRankingData([]); // 뷰 바뀔 때 데이터 초기화 (잔상 방지)
+    setRankingData([]); 
 
     const endpoint = currentView === 'PITCHER' 
         ? 'http://localhost:8080/api/pitching-ranking'
@@ -115,7 +186,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1>KBO 통계 대시보드 (MVP v1.0)</h1>
+      <h1>KBO 통계 대시보드</h1>
 
       <div className="view-selector">
           <button 
