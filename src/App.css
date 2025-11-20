@@ -415,3 +415,92 @@ th.sortable.desc::after {
     color: #3b82f6;
     transform: translateY(2px);
 }
+
+/* =========================================
+   6. 선수 상세 페이지 (PlayerDetail.jsx)
+   ========================================= */
+.detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+    font-size: 1rem;
+}
+.back-button:hover { color: #3b82f6; }
+
+.player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 20px;
+}
+
+.player-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.player-title h1 { font-size: 2.5rem; margin: 0; color: #1e293b; }
+.position-badge {
+    background-color: #3b82f6;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.main-stat { font-size: 1.5rem; color: #64748b; }
+.main-stat strong { color: #3b82f6; font-size: 2.5rem; margin-left: 10px; }
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+/* 카드 공통 */
+.chart-card, .stats-card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+.chart-card h3, .stats-card h3 { margin-top: 0; color: #475569; }
+
+.chart-wrapper { height: 300px; width: 100%; }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    background-color: #f8fafc;
+    border-radius: 12px;
+}
+.stat-item .label { font-size: 0.9rem; color: #64748b; margin-bottom: 5px; }
+.stat-item .value { font-size: 1.4rem; font-weight: 800; color: #1e293b; }
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .content-grid { grid-template-columns: 1fr; }
+}

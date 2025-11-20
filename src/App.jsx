@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom'; 
 import './App.css';
-import { Link } from 'react-router-dom'; // ⚡️ 추가
 
-// 🛠️ 컬럼 설정 (Header Label과 실제 데이터 Key를 매핑)
+// 🛠️ 컬럼 설정
 const COLUMNS = {
     PITCHER: [
         { label: '선수명', key: 'name' },
-        { label: '포지션', key: 'position' }, // ⚡️ 포지션 추가
-        { label: 'ERA', key: 'era', main: true, format: v => v.toFixed(2) }, // main: 빨간색 강조
+        { label: '포지션', key: 'position' },
+        { label: 'ERA', key: 'era', main: true, format: v => v.toFixed(2) },
         { label: 'FIP', key: 'fip', format: v => v.toFixed(2) },
         { label: 'WHIP', key: 'whip', format: v => v.toFixed(2) },
         { label: 'K/9', key: 'kPerNine', format: v => v.toFixed(1) },
@@ -23,7 +23,7 @@ const COLUMNS = {
     ],
     HITTER: [
         { label: '선수명', key: 'name' },
-        { label: '포지션', key: 'position' }, // ⚡️ 포지션 추가
+        { label: '포지션', key: 'position' },
         { label: 'OPS', key: 'ops', main: true, format: v => v.toFixed(3) },
         { label: '타율', key: 'battingAverage', format: v => v.toFixed(3) },
         { label: '홈런', key: 'homeRunBat' },
@@ -45,11 +45,11 @@ const COLUMNS = {
     ]
 };
 
+// 📊 랭킹 테이블 컴포넌트
 const RankingTable = ({ data, statsType }) => {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' });
     const [searchTerm, setSearchTerm] = useState('');
 
-    // 1. 정렬 핸들러
     const handleSort = (key) => {
         let direction = 'desc';
         if (sortConfig.key === key && sortConfig.direction === 'desc') {
@@ -58,31 +58,26 @@ const RankingTable = ({ data, statsType }) => {
         setSortConfig({ key, direction });
     };
 
-    // 2. 데이터 필터링 & 정렬 로직
     const processedData = useMemo(() => {
         let sortedData = [...data];
 
-        // (1) 검색 필터
         if (searchTerm) {
             sortedData = sortedData.filter(player => 
-                player.name.toLowerCase().includes(searchTerm.toLowerCase())
+                player.name && player.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
 
-        // (2) 정렬
         if (sortConfig.key) {
             sortedData.sort((a, b) => {
-                const valA = a[sortConfig.key] ?? 0; // null/undefined 처리 (숫자 0으로)
+                const valA = a[sortConfig.key] ?? 0;
                 const valB = b[sortConfig.key] ?? 0;
                 
-                // 문자열 정렬 (이름, 포지션 등)
                 if (typeof valA === 'string' && typeof valB === 'string') {
                     if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
                     if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
                     return 0;
                 }
 
-                // 숫자 정렬
                 if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
@@ -121,21 +116,29 @@ const RankingTable = ({ data, statsType }) => {
                 </thead>
                 <tbody>
                     {processedData.length > 0 ? (
-                        processedData.map((player) => (
-                            <tr key={player.name}>
+                        processedData.map((player, idx) => (
+                            <tr key={player.id || idx}>
                                 {columns.map((col) => {
-                                    const value = player[col.key] ?? (col.key === 'position' ? '-' : 0); // 포지션 없을 땐 '-'
+                                    const rawValue = player[col.key];
+                                    const value = rawValue ?? (['name', 'position'].includes(col.key) ? '-' : 0);
+                                    
                                     return (
                                         <td 
                                             key={col.key}
                                             style={
-                                                col.main ? { fontWeight: '800', color: '#d32f2f', fontSize: '1.1em' } :
-                                                col.key === 'name' ? { fontWeight: 'bold', color: '#1a237e', textAlign: 'left' } : 
-                                                col.key === 'position' ? { color: '#555', fontWeight: '600' } : {} // 포지션 스타일
+                                                col.main ? { fontWeight: '800', color: '#2563eb', fontSize: '1.1em', backgroundColor: 'rgba(37, 99, 235, 0.03)' } :
+                                                col.key === 'name' ? { fontWeight: '600', textAlign: 'left' } : // ⚡️ 기본 텍스트 색상(검은색) 사용
+                                                col.key === 'position' ? { color: '#64748b', fontSize: '0.9em' } : {}
                                             }
                                         >
-                                            {/* 포맷팅 함수가 있으면 적용, 없으면 그냥 출력 */}
-                                            {col.format && typeof value === 'number' ? col.format(value) : value}
+                                            {col.key === 'name' ? (
+                                                // ⚡️ [수정됨] color: 'black' (검은색 링크)
+                                                <Link to={`/player/${player.id}`} style={{ textDecoration: 'underline', color: 'black', cursor: 'pointer' }}>
+                                                    {value}
+                                                </Link>
+                                            ) : (
+                                                col.format && typeof value === 'number' ? col.format(value) : value
+                                            )}
                                         </td>
                                     );
                                 })}
@@ -144,7 +147,7 @@ const RankingTable = ({ data, statsType }) => {
                     ) : (
                         <tr>
                             <td colSpan={columns.length} style={{ padding: '30px', color: '#888' }}>
-                                검색 결과가 없습니다. ⚾️
+                                데이터가 없습니다. (백엔드 연결 확인 필요) ⚾️
                             </td>
                         </tr>
                     )}
@@ -160,14 +163,20 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
+  const [page, setPage] = useState(1);
+  
+  useEffect(() => {
+      setPage(1);
+      setRankingData([]); 
+  }, [currentView]);
+
   useEffect(() => {
     setLoading(true);
     setError(null);
-    setRankingData([]); 
 
     const endpoint = currentView === 'PITCHER' 
-        ? 'http://localhost:8080/api/pitching-ranking'
-        : 'http://localhost:8080/api/hitting-ranking'; 
+        ? `/api/pitching-ranking?page=${page}&size=20`
+        : `/api/hitting-ranking?page=${page}&size=20`; 
         
     axios.get(endpoint)
       .then(response => {
@@ -182,22 +191,22 @@ function App() {
       .finally(() => {
           setLoading(false);
       });
-  }, [currentView]);
+  }, [currentView, page]);
 
   return (
     <div className="App">
-      <h1>KBO 통계 대시보드</h1>
+      <h1>KBO 통계 랭킹 센터</h1>
 
       <div className="view-selector">
           <button 
               className={currentView === 'PITCHER' ? 'active' : ''}
               onClick={() => setCurrentView('PITCHER')}>
-              투수 랭킹 (ERA)
+              투수 (Pitcher)
           </button>
           <button 
               className={currentView === 'HITTER' ? 'active' : ''}
               onClick={() => setCurrentView('HITTER')}>
-              타자 랭킹 (OPS)
+              타자 (Hitter)
           </button>
       </div>
       
@@ -212,10 +221,30 @@ function App() {
       )}
       
       {!loading && rankingData.length > 0 && (
-          <RankingTable 
-              data={rankingData} 
-              statsType={currentView} 
-          />
+          <>
+            <RankingTable 
+                data={rankingData} 
+                statsType={currentView} 
+            />
+            
+            <div className="pagination">
+                <button 
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                >
+                    ◀ Prev
+                </button>
+                <span style={{ fontWeight: '600', color: '#334155' }}>
+                    Page {page}
+                </span>
+                <button 
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={rankingData.length < 20}
+                >
+                    Next ▶
+                </button>
+            </div>
+          </>
       )}
     </div>
   );
