@@ -2,51 +2,55 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
-// 1. 재사용 가능한 테이블 컴포넌트 (모든 스탯 표시)
+// 1. 재사용 가능한 테이블 컴포넌트
 const RankingTable = ({ data, statsType }) => {
     
-    // 1-A. 헤더: 투수/타자 헤더를 '최종' 업그레이드
-   const headers = statsType === 'PITCHER'
-        ? ['선수명', 'ERA', 'FIP', 'WHIP', 'K/9', 'BB/9', '승', '패', '세이브', '홀드', '이닝', '피안타', '자책점']
-        : ['선수명', 'OPS', '타율', 'OBP', 'SLG', 'wRC', '타석', '타점', '득점', '홈런', '3루타', '2루타', '단타', '도루', '희생타', '희생번트', '사구'];
-    // 1-B. 데이터: 투수/타자 데이터를 '최종' 업그레이드 (소수점 포함!)
+    const headers = statsType === 'PITCHER'
+        // 투수 헤더: 주요 스탯 위주 (ERA, FIP, WHIP...)
+        ? ['선수명', 'ERA', 'FIP', 'WHIP', 'K/BB', 'K/9', 'BB/9', '승', '패', '세이브', '홀드', '이닝', '자책점']
+        
+        // ⚡️ 타자 헤더: 님이 원하신 "메인(OPS) -> 클래식 -> 고급" 순서로 완벽 재배치! ⚡️
+        : ['선수명', 'OPS', '타율', '홈런', '타점', '득점', '도루', 'wOBA', 'wRC', 'ISO', 'BABIP', 'GPA', 'PSN', 'OBP', 'SLG', '삼진', '볼넷'];
+
     const getRowData = (player) => {
+        // ⚡️ 핵심: (값 ?? 0) <-- 이 안전장치가 '흰 화면 저주'를 막아줍니다! ⚡️
         if (statsType === 'PITCHER') {
             return [
                 player.name, 
-                (player.era ?? 0).toFixed(2), // ⬅️ 안전 장치 추가!
-                (player.fip ?? 0).toFixed(2),
-                (player.whip ?? 0).toFixed(2),
-                (player.kPerNine ?? 0).toFixed(1),
-                (player.bbPerNine ?? 0).toFixed(1),
+                (player.era ?? 0).toFixed(2),      // ERA (안전장치 OK)
+                (player.fip ?? 0).toFixed(2),      // FIP
+                (player.whip ?? 0).toFixed(2),     // WHIP
+                (player.kbb ?? 0).toFixed(2),      // K/BB
+                (player.kPerNine ?? 0).toFixed(1), // K/9
+                (player.bbPerNine ?? 0).toFixed(1),// BB/9
                 player.wins ?? 0,
                 player.losses ?? 0,
                 player.saves ?? 0,
                 player.holds ?? 0,
                 (player.inningsPitched ?? 0).toFixed(1),
-                player.hitsAllowed ?? 0,
                 player.earnedRuns ?? 0
             ];
-        } else { // HITTER
+        } else { // HITTER (순서 재배치 + 안전장치 적용)
             return [
                 player.name, 
-                (player.ops ?? 0).toFixed(3), // ⬅️ 안전 장치 추가!
-                (player.battingAverage ?? 0).toFixed(3),
-                (player.onBasePercentage ?? 0).toFixed(3),
-                (player.sluggingPercentage ?? 0).toFixed(3),
-                (player.wrc ?? 0).toFixed(1),
-                player.plateAppearances ?? 0,
-                player.rbi ?? 0,
-                player.runs ?? 0,
-                player.homeRunBat ?? 0,
-                player.tripleBase ?? 0,
-                player.doubleBase ?? 0,
-                player.single ?? 0,
-                player.stolenBases ?? 0,
-                player.hitByPitchBat ?? 0,
-                player.sacrificeFlies ?? 0, // ⬅️ SF 추가!
-                player.sacrificeHits ?? 0,  // ⬅️ SH 추가!
-              
+                (player.ops ?? 0).toFixed(3),            // 1. OPS (메인)
+                (player.battingAverage ?? 0).toFixed(3), // 2. 타율 (클래식 시작)
+                player.homeRunBat ?? 0,                  // 3. 홈런
+                player.rbi ?? 0,                         // 4. 타점
+                player.runs ?? 0,                        // 5. 득점
+                player.stolenBases ?? 0,                 // 6. 도루 (클래식 끝)
+                
+                (player.woba ?? 0).toFixed(3),           // 7. wOBA (고급 시작)
+                (player.wrc ?? 0).toFixed(1),            // 8. wRC
+                (player.iso ?? 0).toFixed(3),            // 9. ISO
+                (player.babip ?? 0).toFixed(3),          // 10. BABIP
+                (player.gpa ?? 0).toFixed(3),            // 11. GPA
+                (player.psn ?? 0).toFixed(2),            // 12. PSN (고급 끝)
+                
+                (player.onBasePercentage ?? 0).toFixed(3), // 13. OBP (기타)
+                (player.sluggingPercentage ?? 0).toFixed(3), // 14. SLG
+                player.strikeoutsBat ?? 0,               // 15. 삼진
+                player.walksBat ?? 0                     // 16. 볼넷
             ];
         }
     };
@@ -62,10 +66,13 @@ const RankingTable = ({ data, statsType }) => {
                 {data.map(player => (
                     <tr key={player.name}>
                         {getRowData(player).map((data, index) => (
-                            // 메인 지표(두 번째 열: ERA 또는 OPS)만 빨간색 강조
+                            // 1번째 열(이름)과 2번째 열(메인 스탯) 강조
                             <td 
                                 key={index} 
-                                style={index === 1 ? {fontWeight: 'bold', color: '#d32f2f'} : {}}>
+                                style={
+                                    index === 1 ? {fontWeight: '800', color: '#d32f2f', fontSize: '1.1em'} : 
+                                    index === 0 ? {fontWeight: 'bold', color: '#1a237e'} : {}
+                                }>
                                 {data}
                             </td>
                         ))}
@@ -76,7 +83,6 @@ const RankingTable = ({ data, statsType }) => {
     );
 };
 
-// 2. (App 컴포넌트 메인 로직)
 function App() {
   const [currentView, setCurrentView] = useState('PITCHER');
   const [rankingData, setRankingData] = useState([]);
@@ -86,11 +92,11 @@ function App() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    
-    // 3. ⚡️ '옛날 주소'가 아니라 '새 주소'로 '전화'를 겁니다! ⚡️
+    setRankingData([]); // 뷰 바뀔 때 데이터 초기화 (잔상 방지)
+
     const endpoint = currentView === 'PITCHER' 
-        ? 'http://localhost:8080/api/pitching-ranking' // (O)
-        : 'http://localhost:8080/api/hitting-ranking'; // (O)
+        ? 'http://localhost:8080/api/pitching-ranking'
+        : 'http://localhost:8080/api/hitting-ranking'; 
         
     axios.get(endpoint)
       .then(response => {
@@ -105,7 +111,7 @@ function App() {
       .finally(() => {
           setLoading(false);
       });
-  }, [currentView]); // currentView가 바뀔 때마다 이 effect가 재실행됨
+  }, [currentView]);
 
   return (
     <div className="App">
@@ -124,12 +130,13 @@ function App() {
           </button>
       </div>
       
-      {loading && <h2>데이터를 불러오는 중입니다...</h2>}
+      {loading && <h2 style={{textAlign: 'center', padding: '20px'}}>데이터를 분석 중입니다...</h2>}
       
       {error && (
-        <div style={{ color: 'red', border: '2px solid red', padding: '10px' }}>
+        <div style={{ color: 'red', border: '2px solid red', padding: '20px', margin: '20px', textAlign: 'center' }}>
           <h2>🚨 API 호출 실패 🚨</h2>
-          <p>엔진 기지(IntelliJ)가 켜져 있는지, 콘솔 오류가 없는지 확인하세요!</p>
+          <p>엔진 기지(IntelliJ)가 켜져 있는지 확인해주세요!</p>
+          <p style={{fontSize: '0.8em', color: '#666'}}>{error.message}</p>
         </div>
       )}
       
@@ -139,7 +146,6 @@ function App() {
               statsType={currentView} 
           />
       )}
-      
     </div>
   );
 }
